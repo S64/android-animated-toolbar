@@ -1,4 +1,11 @@
 apply plugin: 'com.android.application'
+apply plugin: 'com.google.firebase.firebase-crash'
+
+repositories {
+    maven {
+        url 'http://dl.bintray.com/s64/maven'
+    }
+}
 
 android {
     compileSdkVersion android_compilesdk_version
@@ -14,21 +21,70 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
     }
-    buildTypes {
+
+    signingConfigs {
+
+        /*
+        debug {
+            storeFile System.getenv('ANDROID_DEBUG_KEYSTORE_FILE') != null ? file(System.getenv('ANDROID_DEBUG_KEYSTORE_FILE')) : rootProject.file('debug.keystore')
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+        */
+
         release {
+            storeFile file(release_keystore_file)
+            storePassword release_keystore_password
+            keyAlias release_key_alias
+            keyPassword release_key_password
+        }
+
+    }
+
+    buildTypes {
+
+        debug {
             minifyEnabled false
+            debuggable true
+            zipAlignEnabled true
+            shrinkResources false
+            //signingConfig signingConfigs.debug
+
+            applicationIdSuffix '.debug'
+            versionNameSuffix '-debug'
+        }
+
+        release {
+            minifyEnabled true
+            debuggable false
+            zipAlignEnabled true
+            shrinkResources true
+            signingConfig signingConfigs.release
+
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
     }
 }
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
+
     androidTestCompile("com.android.support.test.espresso:espresso-core:${espresso_version}", {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
+
     compile "com.android.support:appcompat-v7:${android_support_library_version}"
     compile "com.android.support:design:${android_support_library_version}"
-    compile project(':animatedtoolbar')
+
+    compile "com.google.firebase:firebase-crash:${firebase_library_version}"
+
+    compile("jp.s64.android:animatedtoolbar:${animated_toolbar_version_name}") {
+        exclude group: 'com.android.support', module: 'appcompat-v7'
+    }
+
     testCompile "junit:junit:${junit_version}"
 }
+
+apply plugin: 'com.google.gms.google-services'

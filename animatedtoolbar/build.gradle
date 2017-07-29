@@ -1,4 +1,9 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+group = artifact_group
+version = animated_toolbar_version_name
 
 android {
     compileSdkVersion android_compilesdk_version
@@ -28,4 +33,61 @@ dependencies {
     })
     compile "com.android.support:appcompat-v7:${android_support_library_version}"
     testCompile "junit:junit:${junit_version}"
+}
+
+bintray {
+    user = bintray_user
+    key = bintray_api_key
+
+    configurations = default_configurations
+
+    pkg {
+        repo = default_repo
+        name = 'android-animated-toolbar'
+        licenses = default_licenses
+        websiteUrl = site_url
+        issueTrackerUrl = issues_url
+        vcsUrl = git_url
+        labels = shared_labels
+        publicDownloadNumbers = true
+
+        version {
+            name = animated_toolbar_version_name
+            released = toIsoDateFormat(new Date())
+            vcsTag = animated_toolbar_version_name
+        }
+    }
+
+}
+
+install {
+    repositories.mavenInstaller {
+        pom {
+            project {
+                packaging 'aar'
+                scm {
+                    url site_url
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar, javadocJar
 }
