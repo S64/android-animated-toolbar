@@ -1,8 +1,10 @@
 package jp.s64.android.animatedtoolbar.util;
 
 import android.animation.Animator;
+import android.animation.LayoutTransition;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.os.Build;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.AnimRes;
@@ -11,6 +13,7 @@ import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 import android.support.v4.view.AbsSavedState;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
+import android.support.v7.widget.ActionMenuView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,6 +44,7 @@ public class AnimatedToolbarHelper<V extends Toolbar & IAnimatedToolbar> {
     private static final int VIEW_STATE_HIDE = View.INVISIBLE;
 
     private static final String TOOLBAR_TITLE_TEXT_VIEW_FIELD = "mTitleTextView";
+    private static final String TOOLBAR_MENU_VIEW_FIELD = "mMenuView";
 
     public static <V extends Toolbar & IAnimatedToolbar> AnimatedToolbarHelper<V> instantiate(V self) {
         return new AnimatedToolbarHelper(self);
@@ -69,6 +73,24 @@ public class AnimatedToolbarHelper<V extends Toolbar & IAnimatedToolbar> {
         {
             setTitleShowAnimationFactory(null);
             setTitleHideAnimationFactory(null);
+        }
+        {
+            self.addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+                @Override
+                public void onLayoutChange(View v, int left, int top, int right, int bottom, int oldLeft, int oldTop, int oldRight, int oldBottom) {
+                    ActionMenuView mv = getMenuView();
+                    if (mv != null) {
+                        {
+                            self.removeOnLayoutChangeListener(this);
+                        }
+                        LayoutTransition lt = new LayoutTransition();
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.ICE_CREAM_SANDWICH) {
+                            lt.setAnimateParentHierarchy(true);
+                        }
+                        mv.setLayoutTransition(lt);
+                    }
+                }
+            });
         }
     }
 
@@ -297,6 +319,25 @@ public class AnimatedToolbarHelper<V extends Toolbar & IAnimatedToolbar> {
             f.setAccessible(true);
             Object ret = f.get(self);
             return ret != null ? (TextView) ret : null;
+        } catch (IllegalAccessException e) {
+            throw new AnimatedToolbarHelperException(e);
+        } finally {
+            f.setAccessible(false);
+        }
+    }
+
+    @Nullable
+    protected ActionMenuView getMenuView() {
+        Field f;
+        try {
+            f = Toolbar.class.getDeclaredField(TOOLBAR_MENU_VIEW_FIELD);
+        } catch (NoSuchFieldException e) {
+            throw new AnimatedToolbarHelperException(e);
+        }
+        try {
+            f.setAccessible(true);
+            Object ret = f.get(self);
+            return ret != null ? (ActionMenuView) ret : null;
         } catch (IllegalAccessException e) {
             throw new AnimatedToolbarHelperException(e);
         } finally {
