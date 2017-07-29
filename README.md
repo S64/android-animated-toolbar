@@ -4,7 +4,7 @@
 
 An example app of S64/android-animated-toolbar.
 
-<img src="assets/screenshot_1.png" width="250" /> <img src="assets/screenshot_2.png" width="250" />
+<img src="assets/screenshot_1.png" width="250" /> <img src="assets/device-2017-07-30-003837.gif" width="250" />
 
 This is contains below components:
 
