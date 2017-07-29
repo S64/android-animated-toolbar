@@ -39,6 +39,14 @@ dependencies {
 }
 ```
 
+and, Add following lines to your `proguard-rules.pro` file.
+
+```proguard
+-dontwarn android.support.v7.**
+-keep class android.support.v7.** { *; }
+-keep interface android.support.v7.** { *; }
+```
+
 ## License
 
 ```
