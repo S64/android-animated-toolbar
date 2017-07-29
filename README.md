@@ -2,7 +2,7 @@
 
 <a href='https://play.google.com/store/apps/details?id=jp.s64.android.animatedtoolbar.example&pcampaignid=MKT-Other-global-all-co-prtnr-py-PartBadge-Mar2515-1'><img alt='Get it on Google Play' src='https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png' height="60" /></a>
 
-An example app of S64/android-animated-toolbar.
+An example project / library of animation-supported Toolbar widget.
 
 <img src="assets/screenshot_1.png" width="250" /> <img src="assets/device-2017-07-30-003837.gif" width="250" />
 
