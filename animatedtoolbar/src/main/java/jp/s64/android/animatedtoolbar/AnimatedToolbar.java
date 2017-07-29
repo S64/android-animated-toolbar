@@ -4,9 +4,9 @@ import android.content.Context;
 import android.os.Parcelable;
 import android.support.annotation.IntegerRes;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v7.widget.Toolbar;
 import android.util.AttributeSet;
-import android.view.ViewGroup;
 import android.view.animation.Interpolator;
 
 import jp.s64.android.animatedtoolbar.util.AnimatedToolbarHelper;
@@ -38,6 +38,26 @@ public class AnimatedToolbar extends Toolbar
     @Override
     public void hide(boolean animate) {
         mHelper.hide(animate);
+    }
+
+    @Override
+    public void setTitle(@StringRes int resId) {
+        mHelper.setTitle(resId);
+    }
+
+    @Override
+    public void setTitle(CharSequence title) {
+        mHelper.setTitle(title);
+    }
+
+    @Override
+    public void setTitleWithoutAnimation(CharSequence title) {
+        super.setTitle(title);
+    }
+
+    @Override
+    public void setTitleWithoutAnimation(@StringRes int resId) {
+        super.setTitle(resId);
     }
 
     @Override
@@ -80,8 +100,4 @@ public class AnimatedToolbar extends Toolbar
         }
     }
 
-    @Override
-    public void setLayoutParams(ViewGroup.LayoutParams params) {
-        super.setLayoutParams(params);
-    }
 }

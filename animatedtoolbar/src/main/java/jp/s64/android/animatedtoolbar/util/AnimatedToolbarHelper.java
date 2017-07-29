@@ -2,31 +2,47 @@ package jp.s64.android.animatedtoolbar.util;
 
 import android.animation.Animator;
 import android.animation.ValueAnimator;
+import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.AnimRes;
 import android.support.annotation.IntegerRes;
 import android.support.annotation.Nullable;
+import android.support.annotation.StringRes;
 import android.support.v4.view.AbsSavedState;
 import android.support.v4.view.animation.LinearOutSlowInInterpolator;
+import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.view.animation.Interpolator;
+import android.widget.TextView;
+
+import java.lang.reflect.Field;
 
 import jp.s64.android.animatedtoolbar.IAnimatedToolbar;
+import jp.s64.android.animatedtoolbar.R;
 
-public class AnimatedToolbarHelper<V extends View>
-        implements
-        IAnimatedToolbar {
+public class AnimatedToolbarHelper<V extends Toolbar & IAnimatedToolbar> {
 
     @IntegerRes
     private static final int DEFAULT_DURATION_RES_ID = android.R.integer.config_mediumAnimTime;
+
+    @AnimRes
+    private static final int DEFAULT_TITLE_SHOW_ANIM = R.anim.show_title;
+
+    @AnimRes
+    private static final int DEFAULT_TITLE_HIDE_ANIM = R.anim.hide_title;
 
     private static final Interpolator DEFAULT_INTERPOLATOR = new LinearOutSlowInInterpolator();
 
     private static final int VIEW_STATE_VISIBLE = View.VISIBLE;
     private static final int VIEW_STATE_HIDE = View.INVISIBLE;
 
-    public static <V extends View> AnimatedToolbarHelper<V> instantiate(V self) {
+    private static final String TOOLBAR_TITLE_TEXT_VIEW_FIELD = "mTitleTextView";
+
+    public static <V extends Toolbar & IAnimatedToolbar> AnimatedToolbarHelper<V> instantiate(V self) {
         return new AnimatedToolbarHelper(self);
     }
 
@@ -39,6 +55,9 @@ public class AnimatedToolbarHelper<V extends View>
     private int mAnimationDuration;
     private Interpolator mInterpolator;
 
+    private AnimationFactory mTitleShowAnimationFactory;
+    private AnimationFactory mTitleHideAnimationFactory;
+
     protected AnimatedToolbarHelper(final V self) {
         {
             this.self = self;
@@ -47,30 +66,29 @@ public class AnimatedToolbarHelper<V extends View>
             setVisibilityDurationResId(null);
             setVisibilityInterpolator(null);
         }
+        {
+            setTitleShowAnimationFactory(null);
+            setTitleHideAnimationFactory(null);
+        }
     }
 
-    @Override
     public void show(boolean animate) {
         switchVisibility(true, animate);
     }
 
-    @Override
     public void hide(boolean animate) {
         switchVisibility(false, animate);
     }
 
-    @Override
     public boolean isShowing() {
         return self.getVisibility() == VIEW_STATE_VISIBLE;
     }
 
-    @Override
     public void setVisibilityDurationResId(@Nullable @IntegerRes Integer resId) {
         int id = resId != null ? resId : DEFAULT_DURATION_RES_ID;
         setVisibilityDuration(self.getResources().getInteger(id));
     }
 
-    @Override
     public void setVisibilityDuration(@Nullable Integer duration) {
         if (duration == null) {
             setVisibilityDurationResId(null);
@@ -79,7 +97,6 @@ public class AnimatedToolbarHelper<V extends View>
         }
     }
 
-    @Override
     public void setVisibilityInterpolator(@Nullable Interpolator interpolator) {
         mInterpolator = interpolator != null ? interpolator : DEFAULT_INTERPOLATOR;
     }
@@ -183,6 +200,79 @@ public class AnimatedToolbarHelper<V extends View>
         }
     }
 
+    public void setTitle(final CharSequence title) {
+        final TextView view = getTitleTextView();
+        if (view != null && view.getParent() != null) {
+            final Animation show, hide;
+            {
+                hide = mTitleHideAnimationFactory.createNew(self.getContext());
+                show = title.length() > 0 ? mTitleShowAnimationFactory.createNew(self.getContext()) : null;
+            }
+            if (show == null) {
+                hide.setFillAfter(false);
+            }
+            hide.setAnimationListener(new Animation.AnimationListener() {
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
+
+                @Override
+                public void onAnimationEnd(Animation animation) {
+                    self.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            self.setTitleWithoutAnimation(title);
+                        }
+                    });
+                    if (show != null) {
+                        view.startAnimation(show);
+                    }
+                }
+
+                @Override
+                public void onAnimationRepeat(Animation animation) {
+
+                }
+            });
+            view.startAnimation(hide);
+        } else {
+            self.setTitleWithoutAnimation(title);
+            if (view != null) {
+                view.startAnimation(mTitleShowAnimationFactory.createNew(self.getContext()));
+            }
+        }
+    }
+
+    public void setTitle(@StringRes int resId) {
+        setTitle(self.getContext().getString(resId));
+    }
+
+    public void setTitleShowAnimationFactory(@Nullable AnimationFactory factory) {
+        mTitleShowAnimationFactory = factory != null ? factory : new AnimationFactory() {
+
+            @Override
+            public Animation createNew(Context context) {
+                Animation ret = AnimationUtils.loadAnimation(context, DEFAULT_TITLE_SHOW_ANIM);
+                ret.setInterpolator(DEFAULT_INTERPOLATOR);
+                return ret;
+            }
+
+        };
+    }
+
+    public void setTitleHideAnimationFactory(@Nullable AnimationFactory factory) {
+        mTitleHideAnimationFactory = factory != null ? factory : new AnimationFactory() {
+
+            @Override
+            public Animation createNew(Context context) {
+                Animation ret = AnimationUtils.loadAnimation(context, DEFAULT_TITLE_HIDE_ANIM);
+                ret.setInterpolator(DEFAULT_INTERPOLATOR);
+                return ret;
+            }
+
+        };
+    }
+
     protected void setTopMargin(int topMargin) {
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) self.getLayoutParams();
         params.topMargin = topMargin;
@@ -193,6 +283,31 @@ public class AnimatedToolbarHelper<V extends View>
     protected int getTopMargin() {
         ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) self.getLayoutParams();
         return params.topMargin;
+    }
+
+    @Nullable
+    protected TextView getTitleTextView() {
+        Field f;
+        try {
+            f = Toolbar.class.getDeclaredField(TOOLBAR_TITLE_TEXT_VIEW_FIELD);
+        } catch (NoSuchFieldException e) {
+            throw new AnimatedToolbarHelperException(e);
+        }
+        try {
+            f.setAccessible(true);
+            Object ret = f.get(self);
+            return ret != null ? (TextView) ret : null;
+        } catch (IllegalAccessException e) {
+            throw new AnimatedToolbarHelperException(e);
+        } finally {
+            f.setAccessible(false);
+        }
+    }
+
+    protected static class AnimatedToolbarHelperException extends RuntimeException {
+        public AnimatedToolbarHelperException(Throwable throwable) {
+            super(throwable);
+        }
     }
 
     public static class SavedState extends AbsSavedState {
@@ -261,6 +376,12 @@ public class AnimatedToolbarHelper<V extends View>
         public void setHeight(int height) {
             this.height = height;
         }
+
+    }
+
+    public interface AnimationFactory {
+
+        Animation createNew(Context context);
 
     }
 
