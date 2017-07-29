@@ -20,7 +20,7 @@ Add following lines to your buildscripts.
 ```groovy
 buildscript {
     ext {
-        animated_toolbar_version = '0.0.1'
+        animated_toolbar_version = '0.1.0'
     }
 }
 ```

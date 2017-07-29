@@ -26,8 +26,8 @@ allprojects {
     }
 
     ext {
-        animated_toolbar_version_name = '0.0.1'
-        android_version_code = 1
+        animated_toolbar_version_name = '0.1.0'
+        android_version_code = 2
 
         artifact_group = 'jp.s64.android'
         site_url = 'https://github.com/S64/android-animated-toolbar'
