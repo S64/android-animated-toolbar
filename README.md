@@ -4,7 +4,7 @@
 
 An example project / library of animation-supported Toolbar widget.
 
-<img src="assets/device-2017-07-30-095025.gif" width="250"/>
+<img src="assets/screenshot_1.png" width="250" /> <img src="assets/device-2017-07-30-003837.gif" width="250" />
 
 This is contains below components:
 
@@ -12,8 +12,6 @@ This is contains below components:
 - AnimatedToolbarActivity
 - AnimatedToolbarHelper
 - ActionBarWrapper
-
-<img src="assets/device-2017-07-30-003837.gif" width="250" />
 
 ## Usages
 
