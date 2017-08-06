@@ -47,6 +47,10 @@ and, Add following lines to your `proguard-rules.pro` file.
 -keep interface android.support.v7.** { *; }
 ```
 
+## Donate
+
+<a href="https://donorbox.org/android-animated-toolbar"><img src="https://d1iczxrky3cnb2.cloudfront.net/button-small-blue.png" /></a>
+
 ## License
 
 ```
